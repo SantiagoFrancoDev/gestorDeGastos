@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Seymour+One&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Ranchers&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+    <title>Mi Bolsillo</title>
+</head>
+<body>
+    <div class="container" id="contenedor-top">
+    <form action="" id="transactionForm">
+        <h1>Mi BILLETERA</h1>
+        <div> 
+        Tipo De Transaccion
+        <input  id="ingreso" type="radio" name="transactionType" value="Ingreso" class="bottom20">
+        <label for="ingreso">Ingreso</label>
+        <input  id="egreso" type="radio"  name="transactionType" value="Egreso">
+        <label for="egreso">Egreso</label>
+        </div>
+        <div> 
+        <label for="TransactionDescription">Descripcion</label>
+        <input type="text" id="TransactionDescription" name="TransactionDescription" class="bottom20">
+         </div>
+         <div> 
+        <label for="TransactionAmount">Monto</label>
+        <input type="number" id="TransactionAmount" name="TransactionAmount" class="bottom20" >
+         </div>
+         <div> 
+        <label for="CategoryType">Categoria</label>
+        <input type="text" id="CategoryType" name="CategoryType" class="bottom20">
+        </div>
+        <div><button id="botonDeEnvio">Añadir</button></div>
+    </form>    
+</div>
+<div class="tableStyle container">
+<table id="transactionTable">
+    <tr>
+        <th>Tipo</th>
+        <th>Descripcion</th>
+        <th>Monto</th>
+        <th>Categoria</th>
+        <th>Eliminar</th>
+    </tr>
+</table>
+</div>
+<script>
+    const form = document.getElementById("transactionForm");
+
+    form.addEventListener("submit", function(event){
+      event.preventDefault(); 
+      let transactionFormData =  new FormData(form);
+      let transactionObj = convertFormDataToTransactionObj(transactionFormData)
+      saveTransactionObj(transactionObj)
+      insertRowTransactionTable(transactionObj)
+      form.reset();
+    })
+
+    document.addEventListener("DOMContentLoaded", function(event){
+      let transactionObjArr = JSON.parse(localStorage.getItem("transactionData"))
+      transactionObjArr.forEach(
+          function(arrayElement){
+            insertRowTransactionTable(arrayElement)
+           
+      }
+      )
+    })
+
+    function getNewTransactionId(){
+       let lastTransactionId = localStorage.getItem("lastTransactionId") || "-1"
+       let newTransactionId = JSON.parse(lastTransactionId) + 1;
+       localStorage.setItem("lastTransactionId", JSON.stringify(newTransactionId))
+       return newTransactionId;
+    }
+
+    function convertFormDataToTransactionObj(transactionFormData){
+      let transactionType = transactionFormData.get("transactionType")
+      let TransactionDescription = transactionFormData.get("TransactionDescription")
+      let TransactionAmount =  transactionFormData.get("TransactionAmount"); 
+      let CategoryType =  transactionFormData.get("CategoryType");
+      let transactionId = getNewTransactionId();
+      return {
+        "transactionType":transactionType,
+       "TransactionDescription":TransactionDescription, 
+       "TransactionAmount":TransactionAmount, 
+       "CategoryType":CategoryType ,
+       "transactionId": transactionId
+      } 
+    }
+
+    function insertRowTransactionTable(transactionObj){
+        let transactionTableRef = document.getElementById("transactionTable");
+
+        let newTransactionRowRef = transactionTableRef.insertRow(-1);
+        newTransactionRowRef.setAttribute("data-transaction-id", transactionObj["transactionId"])
+
+        let newTypeCellRef = newTransactionRowRef.insertCell(0);
+       newTypeCellRef.textContent = transactionObj["transactionType"]
+
+       newTypeCellRef = newTransactionRowRef.insertCell(1);
+       newTypeCellRef.textContent = transactionObj["TransactionDescription"]
+
+       newTypeCellRef = newTransactionRowRef.insertCell(2);
+       newTypeCellRef.textContent =  transactionObj["TransactionAmount"]; 
+
+      newTypeCellRef = newTransactionRowRef.insertCell(3);
+      newTypeCellRef.textContent = transactionObj["CategoryType"]
+
+      let  newDeleteCell = newTransactionRowRef.insertCell(4);
+      let deleteButton = document.createElement("button")
+      deleteButton.textContent = "Eliminar"
+      newDeleteCell.appendChild(deleteButton)
+
+     
+
+       deleteButton.addEventListener("click", (event) => { 
+           let transactionRow = event.target.parentNode.parentNode
+          let transactionId = transactionRow.getAttribute("data-transaction-id")
+          transactionRow.remove();
+          deleteTransactionObject(transactionId);
+
+       })
+
+    }
+     // le paso como parametro el id de la transaccion que quiero eliminar
+    function deleteTransactionObject(transactionId){
+        //obtengolas transacciones de mi base de datos / DESCONVIERTO DE jsoN a objeto
+     let transactionObjArr = JSON.parse(localStorage.getItem("transactionData"));
+     //busco el indice , la posicion de la transaccion que quiero eliminar
+     let transactionIndexInArray = transactionObjArr.findIndex(element => element.transactionId === transactionId);
+     // elimino el elemento de esa posicion
+     transactionObjArr.splice(transactionIndexInArray, 1)
+     // convierto de objeto a JSON
+      let transactionObjArrayJSON = JSON.stringify(transactionObjArr);
+
+      localStorage.setItem("transactionData", transactionArrayJSON)
+    }
+
+    function saveTransactionObj(transactionObj){
+
+        let myTransactionArray = JSON.parse(localStorage.getItem("transactionData")) || [];
+        myTransactionArray.push(transactionObj);
+        let transactionArrayJSON = JSON.stringify(myTransactionArray);
+        localStorage.setItem("transactionData", transactionArrayJSON);
+    }
+</script>
+</body>
+</html>
+
+
+ 
